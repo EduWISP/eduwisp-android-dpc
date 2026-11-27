@@ -24,4 +24,16 @@
     <string name="not_device_owner">EduWISP non è il proprietario del dispositivo: le policy non possono essere applicate.</string>
     <string name="sync_now">Sincronizza ora</string>
     <string name="attribution">Basato su EduWISP · software libero AGPL-3.0</string>
+    <string name="family_title">Accesso dei familiari</string>
+    <string name="family_explanation">Sei maggiorenne: i tuoi familiari non vedono più i tuoi dati scolastici in EduWISP (classe e dispositivi) a meno che tu non lo consenta. Puoi cambiare idea quando vuoi.</string>
+    <string name="family_state_none">Non hai ancora scelto: i familiari non hanno accesso.</string>
+    <string name="family_state_granted">Hai consentito l\'accesso ai familiari.</string>
+    <string name="family_state_denied">Non hai consentito l\'accesso ai familiari.</string>
+    <string name="family_state_pending">Scelta in invio alla scuola…</string>
+    <string name="family_allow">Consenti</string>
+    <string name="family_deny">Non consentire</string>
+    <string name="family_confirm_title">Conferma la tua scelta</string>
+    <string name="family_confirm_allow">Usa il blocco schermo per consentire l\'accesso ai familiari.</string>
+    <string name="family_confirm_deny">Usa il blocco schermo per negare l\'accesso ai familiari.</string>
+    <string name="family_need_lock">Per scegliere imposta prima un blocco schermo (PIN, sequenza o password): così nessun altro può scegliere al tuo posto.</string>
 </resources>

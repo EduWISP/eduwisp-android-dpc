@@ -5,6 +5,8 @@ package org.eduwisp.dpc
 import org.eduwisp.dpc.protocol.AgentInfo
 import org.eduwisp.dpc.protocol.EnrollmentRequest
 import org.eduwisp.dpc.protocol.EnrollmentResponse
+import org.eduwisp.dpc.protocol.FamilyAccess
+import org.eduwisp.dpc.protocol.FamilyAccessChoice
 import org.eduwisp.dpc.protocol.NonCompliance
 import org.eduwisp.dpc.protocol.NonComplianceReason
 import org.eduwisp.dpc.protocol.Policy
@@ -14,6 +16,7 @@ import org.eduwisp.dpc.protocol.StatusReport
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -77,5 +80,31 @@ class ProtocolMessagesTest {
     @Test
     fun `legge l errore di esempio`() {
         assertEquals("token_expired", ProtocolError.parse(example("error")).code)
+    }
+
+    @Test
+    fun `la policy senza family_access non chiede nulla`() {
+        assertNull(Policy.parse(example("policy")).familyAccess)
+    }
+
+    @Test
+    fun `legge la richiesta di scelta dei familiari`() {
+        assertEquals(FamilyAccess(granted = null), Policy.parse(example("policy-family-access")).familyAccess)
+    }
+
+    @Test
+    fun `la scelta dei familiari corrisponde all esempio`() {
+        val expected = example("status-report-family-access")
+        val report = StatusReport(
+            policyVersionApplied = 4,
+            nonCompliance = emptyList(),
+            agentVersion = "0.2.0",
+            osVersion = "15",
+            familyAccessChoice = FamilyAccessChoice(false, "2027-03-02T08:15:00+01:00"),
+        ).toJson()
+        assertEquals(
+            expected.getJSONObject("family_access_choice").asMap(),
+            report.getJSONObject("family_access_choice").asMap(),
+        )
     }
 }

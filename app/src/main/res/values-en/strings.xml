@@ -23,4 +23,16 @@
     <string name="not_device_owner">EduWISP is not the device owner: policies cannot be applied.</string>
     <string name="sync_now">Sync now</string>
     <string name="attribution">Based on EduWISP · free software AGPL-3.0</string>
+    <string name="family_title">Family access</string>
+    <string name="family_explanation">You are an adult: your family members no longer see your school data in EduWISP (class and devices) unless you allow it. You can change your mind at any time.</string>
+    <string name="family_state_none">You have not chosen yet: family members have no access.</string>
+    <string name="family_state_granted">You allowed family access.</string>
+    <string name="family_state_denied">You did not allow family access.</string>
+    <string name="family_state_pending">Sending your choice to the school…</string>
+    <string name="family_allow">Allow</string>
+    <string name="family_deny">Don\'t allow</string>
+    <string name="family_confirm_title">Confirm your choice</string>
+    <string name="family_confirm_allow">Use your screen lock to allow family access.</string>
+    <string name="family_confirm_deny">Use your screen lock to deny family access.</string>
+    <string name="family_need_lock">To choose, first set a screen lock (PIN, pattern or password) so nobody else can choose for you.</string>
 </resources>

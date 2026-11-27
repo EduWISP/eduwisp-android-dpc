@@ -12,6 +12,7 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+import org.eduwisp.dpc.protocol.FamilyAccessChoice
 
 class PrefsAgentStore(context: Context) : AgentStore {
     val prefs: SharedPreferences = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -38,6 +39,22 @@ class PrefsAgentStore(context: Context) : AgentStore {
     override var retired: Boolean
         get() = prefs.getBoolean("retired", false)
         set(value) = prefs.edit().putBoolean("retired", value).apply()
+    override var familyAccessRequested: Boolean
+        get() = prefs.getBoolean("family_access_requested", false)
+        set(value) = prefs.edit().putBoolean("family_access_requested", value).apply()
+    override var familyAccessGranted: Boolean?
+        get() = prefs.getString("family_access_granted", null)?.toBooleanStrictOrNull()
+        set(value) = prefs.edit().putString("family_access_granted", value?.toString()).apply()
+    override var pendingFamilyChoice: FamilyAccessChoice?
+        get() {
+            val granted = prefs.getString("family_choice_granted", null)?.toBooleanStrictOrNull()
+            val at = prefs.getString("family_choice_at", null)
+            return if (granted != null && at != null) FamilyAccessChoice(granted, at) else null
+        }
+        set(value) = prefs.edit()
+            .putString("family_choice_granted", value?.granted?.toString())
+            .putString("family_choice_at", value?.decidedAt)
+            .apply()
 
     private fun string(key: String) = object : kotlin.properties.ReadWriteProperty<Any, String?> {
         override fun getValue(thisRef: Any, property: kotlin.reflect.KProperty<*>) = prefs.getString(key, null)

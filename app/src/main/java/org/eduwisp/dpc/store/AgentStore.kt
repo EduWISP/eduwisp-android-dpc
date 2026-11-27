@@ -2,6 +2,8 @@
 // Copyright (C) 2026 Michele Salerno e i contributori di EduWISP
 package org.eduwisp.dpc.store
 
+import org.eduwisp.dpc.protocol.FamilyAccessChoice
+
 /**
  * Stato dell'agente. Solo dati tecnici: nessun dato personale dello studente
  * (ADR-0008). La credenziale del dispositivo è conservata cifrata.
@@ -17,6 +19,13 @@ interface AgentStore {
     var lastSyncMillis: Long
     var lastError: String?
     var retired: Boolean
+
+    /** La scuola chiede allo studente maggiorenne se lasciare l'accesso ai familiari (ADR-0018). */
+    var familyAccessRequested: Boolean
+    /** Scelta registrata dal server; null = non ancora scelto. */
+    var familyAccessGranted: Boolean?
+    /** Scelta confermata sul dispositivo ma non ancora ricevuta dal server. */
+    var pendingFamilyChoice: FamilyAccessChoice?
 }
 
 class MemoryAgentStore : AgentStore {
@@ -30,6 +39,9 @@ class MemoryAgentStore : AgentStore {
     override var lastSyncMillis: Long = 0
     override var lastError: String? = null
     override var retired: Boolean = false
+    override var familyAccessRequested: Boolean = false
+    override var familyAccessGranted: Boolean? = null
+    override var pendingFamilyChoice: FamilyAccessChoice? = null
 }
 
 const val DEFAULT_POLL_SECONDS = 900
