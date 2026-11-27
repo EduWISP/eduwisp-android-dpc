@@ -12,7 +12,10 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+import org.eduwisp.dpc.protocol.AllowedApp
 import org.eduwisp.dpc.protocol.FamilyAccessChoice
+import org.json.JSONArray
+import org.json.JSONObject
 
 class PrefsAgentStore(context: Context) : AgentStore {
     val prefs: SharedPreferences = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -45,6 +48,16 @@ class PrefsAgentStore(context: Context) : AgentStore {
     override var familyAccessGranted: Boolean?
         get() = prefs.getString("family_access_granted", null)?.toBooleanStrictOrNull()
         set(value) = prefs.edit().putString("family_access_granted", value?.toString()).apply()
+    override var lastPolicyJson by string("last_policy")
+    override var nextAppExpiryMillis: Long?
+        get() = prefs.getLong("next_app_expiry", 0).takeIf { it > 0 }
+        set(value) = prefs.edit().putLong("next_app_expiry", value ?: 0).apply()
+    override var missingRequiredApps: List<AllowedApp>
+        get() = parseMissingRequired(prefs.getString(MISSING_REQUIRED, null))
+        set(value) {
+            val json = JSONArray(value.map { JSONObject().put("id", it.id).put("name", it.name ?: "") })
+            prefs.edit().putString(MISSING_REQUIRED, json.toString()).remove("missing_required").apply()
+        }
     override var pendingFamilyChoice: FamilyAccessChoice?
         get() {
             val granted = prefs.getString("family_choice_granted", null)?.toBooleanStrictOrNull()
@@ -64,7 +77,21 @@ class PrefsAgentStore(context: Context) : AgentStore {
 
     companion object {
         const val FILE = "agent"
+
+        /** Chiave nuova: la 0.3.0 di prova salvava un altro formato in "missing_required". */
+        private const val MISSING_REQUIRED = "missing_required_apps"
     }
+}
+
+/** Legge le app obbligatorie mancanti; un dato illeggibile vale «nessuna» (si ricalcola al ciclo dopo). */
+internal fun parseMissingRequired(raw: String?): List<AllowedApp> = try {
+    val json = JSONArray(raw ?: "[]")
+    (0 until json.length()).map {
+        val o = json.getJSONObject(it)
+        AllowedApp(o.getString("id"), required = true, name = o.optString("name").ifBlank { null })
+    }
+} catch (e: org.json.JSONException) {
+    emptyList()
 }
 
 /** AES-GCM con chiave non esportabile nell'Android Keystore. */

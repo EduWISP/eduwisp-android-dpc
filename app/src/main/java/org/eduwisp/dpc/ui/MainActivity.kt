@@ -10,7 +10,9 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.format.DateUtils
 import android.view.View
+import android.net.Uri
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import java.time.OffsetDateTime
 import org.eduwisp.dpc.R
@@ -110,6 +112,30 @@ class MainActivity : Activity() {
         }
         findViewById<TextView>(R.id.details).text = lines.joinToString("\n")
         renderFamily()
+        renderRequired()
+    }
+
+    /** App obbligatorie non installate (ADR-0019): un pulsante per ciascuna apre lo store. */
+    private fun renderRequired() {
+        val missing = store.missingRequiredApps
+        findViewById<View>(R.id.required_section).visibility = if (missing.isEmpty()) View.GONE else View.VISIBLE
+        val list = findViewById<LinearLayout>(R.id.required_list)
+        list.removeAllViews()
+        for (app in missing) {
+            list.addView(
+                Button(this).apply {
+                    text = getString(R.string.required_install, app.name ?: app.id)
+                    isAllCaps = false
+                    setOnClickListener { openStore(app.id) }
+                },
+            )
+        }
+    }
+
+    private fun openStore(id: String) {
+        val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$id"))
+        val web = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$id"))
+        startActivity(if (market.resolveActivity(packageManager) != null) market else web)
     }
 
     private fun renderFamily() {

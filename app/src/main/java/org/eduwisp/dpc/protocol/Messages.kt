@@ -4,6 +4,8 @@ package org.eduwisp.dpc.protocol
 
 import org.json.JSONArray
 import org.json.JSONObject
+import java.time.OffsetDateTime
+import java.time.format.DateTimeParseException
 
 /** Messaggi del protocollo EduWISP v0 (https://eduwisp.org/protocol/v0/). */
 const val PROTOCOL_VERSION = "0"
@@ -66,12 +68,38 @@ data class FamilyAccess(val granted: Boolean?)
 /** Scelta dello studente, confermata con il blocco schermo; [decidedAt] in ISO 8601. */
 data class FamilyAccessChoice(val granted: Boolean, val decidedAt: String)
 
+/**
+ * App consentita (ADR-0019); [untilMillis] è la scadenza di uno sblocco temporaneo,
+ * [required] indica un'app obbligatoria decisa dall'istituto.
+ */
+data class AllowedApp(
+    val id: String,
+    val untilMillis: Long? = null,
+    val required: Boolean = false,
+    /** Nome da mostrare allo studente; se manca si usa [id]. */
+    val name: String? = null,
+)
+
+/**
+ * App della policy: con `allowlist` si usano solo le app in [allowed], con `blocklist` si
+ * bloccano solo quelle in [blocked]. Le app in [blocked] (vietate dalla piattaforma) sono
+ * sempre bloccate.
+ */
+data class AppsPolicy(
+    val mode: String,
+    val allowed: List<AllowedApp>,
+    val blocked: Set<String> = emptySet(),
+)
+
 data class Policy(
     val policyVersion: Int,
     val pollIntervalSeconds: Int,
     /** Impostazioni ricevute; quelle sconosciute restano qui e vengono segnalate come non supportate. */
     val settings: Map<String, Any>,
     val familyAccess: FamilyAccess? = null,
+    val apps: AppsPolicy? = null,
+    /** Messaggio originale, conservato per riapplicare la policy senza rete. */
+    val source: String = "",
 ) {
     companion object {
         fun parse(json: JSONObject): Policy {
@@ -85,7 +113,32 @@ data class Policy(
                 familyAccess = json.optJSONObject("family_access")?.let {
                     FamilyAccess(if (it.isNull("granted")) null else it.getBoolean("granted"))
                 },
+                apps = json.optJSONObject("apps")?.let(::parseApps),
+                source = json.toString(),
             )
+        }
+
+        private fun parseApps(json: JSONObject): AppsPolicy {
+            val list = json.optJSONArray("allowed") ?: JSONArray()
+            val allowed = (0 until list.length()).map { i ->
+                val item = list.getJSONObject(i)
+                val until = item.optString("until").takeIf { it.isNotEmpty() }?.let {
+                    try {
+                        OffsetDateTime.parse(it).toInstant().toEpochMilli()
+                    } catch (e: DateTimeParseException) {
+                        throw ProtocolException("until non valido: $it")
+                    }
+                }
+                AllowedApp(
+                    item.getString("id"),
+                    until,
+                    item.optBoolean("required", false),
+                    item.optString("name").takeIf { it.isNotBlank() }?.take(100),
+                )
+            }
+            val blockedJson = json.optJSONArray("blocked") ?: JSONArray()
+            val blocked = (0 until blockedJson.length()).map { blockedJson.getString(it) }.toSet()
+            return AppsPolicy(json.optString("mode"), allowed, blocked)
         }
     }
 }

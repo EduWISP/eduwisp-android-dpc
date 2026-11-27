@@ -16,10 +16,18 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import org.eduwisp.dpc.BuildConfig
 import org.eduwisp.dpc.policy.AndroidDeviceControls
+import org.eduwisp.dpc.policy.LocalPolicy
 import org.eduwisp.dpc.policy.PolicyApplier
 import org.eduwisp.dpc.protocol.AgentInfo
 import org.eduwisp.dpc.store.PrefsAgentStore
 import java.util.concurrent.TimeUnit
+
+class AppExpiryWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
+    override fun doWork(): Result {
+        LocalPolicy.reapply(applicationContext)
+        return Result.success()
+    }
+}
 
 class SyncWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     override fun doWork(): Result {
@@ -28,6 +36,7 @@ class SyncWorker(context: Context, params: WorkerParameters) : Worker(context, p
         // Un ciclo alla volta: due registrazioni parallele creerebbero due dispositivi sul server.
         val outcome = synchronized(LOCK) { agent.sync() }
         Sync.schedule(applicationContext, store.pollIntervalSeconds)
+        Sync.scheduleAppExpiry(applicationContext, store.nextAppExpiryMillis, System.currentTimeMillis())
         return when (outcome) {
             Outcome.DONE, Outcome.STOP -> Result.success()
             Outcome.RETRY -> Result.retry()
@@ -35,7 +44,7 @@ class SyncWorker(context: Context, params: WorkerParameters) : Worker(context, p
     }
 
     companion object {
-        private val LOCK = Any()
+        val LOCK = Any()
 
         fun agentInfo() = AgentInfo(
             agentVersion = BuildConfig.VERSION_NAME,
@@ -63,6 +72,20 @@ object Sync {
             .build()
         WorkManager.getInstance(context)
             .enqueueUniquePeriodicWork(PERIODIC, ExistingPeriodicWorkPolicy.UPDATE, request)
+    }
+
+    private const val APP_EXPIRY = "eduwisp-app-expiry"
+
+    /** Alla scadenza di uno sblocco l'app si richiude, anche senza rete (ADR-0019). */
+    fun scheduleAppExpiry(context: Context, expiryMillis: Long?, nowMillis: Long) {
+        // Nessuna scadenza: un lavoro rimasto in coda riapplicherebbe solo la stessa policy.
+        // Non lo si cancella, perché può essere proprio il lavoro in corso.
+        val manager = WorkManager.getInstance(context)
+        if (expiryMillis == null) return
+        val request = OneTimeWorkRequestBuilder<AppExpiryWorker>()
+            .setInitialDelay(maxOf(expiryMillis - nowMillis, 0) + 1000, TimeUnit.MILLISECONDS)
+            .build()
+        manager.enqueueUniqueWork(APP_EXPIRY, ExistingWorkPolicy.REPLACE, request)
     }
 
     fun runNow(context: Context) {

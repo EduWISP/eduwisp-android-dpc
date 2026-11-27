@@ -40,7 +40,10 @@ class Agent(
             is Result.Rejected -> return rejected(result)
             is Result.Unreachable -> return unreachable(result)
         }
-        val issues = applier.apply(policy)
+        val issues = applier.apply(policy, now())
+        store.lastPolicyJson = policy.source
+        store.nextAppExpiryMillis = PolicyApplier.nextExpiry(policy.apps, now())
+        store.missingRequiredApps = applier.missingRequired(policy.apps)
         store.policyVersionApplied = policy.policyVersion
         store.pollIntervalSeconds = policy.pollIntervalSeconds
         store.nonCompliance = issues.map { "${it.setting}:${it.reason.wire}" }
