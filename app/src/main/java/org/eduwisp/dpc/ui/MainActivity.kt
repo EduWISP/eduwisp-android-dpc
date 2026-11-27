@@ -121,12 +121,12 @@ class MainActivity : Activity() {
         findViewById<View>(R.id.required_section).visibility = if (missing.isEmpty()) View.GONE else View.VISIBLE
         val list = findViewById<LinearLayout>(R.id.required_list)
         list.removeAllViews()
-        for (id in missing) {
+        for (app in missing) {
             list.addView(
                 Button(this).apply {
-                    text = getString(R.string.required_install, id)
+                    text = getString(R.string.required_install, app.name ?: app.id)
                     isAllCaps = false
-                    setOnClickListener { openStore(id) }
+                    setOnClickListener { openStore(app.id) }
                 },
             )
         }

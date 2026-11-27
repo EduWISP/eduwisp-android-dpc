@@ -72,7 +72,13 @@ data class FamilyAccessChoice(val granted: Boolean, val decidedAt: String)
  * App consentita (ADR-0019); [untilMillis] è la scadenza di uno sblocco temporaneo,
  * [required] indica un'app obbligatoria decisa dall'istituto.
  */
-data class AllowedApp(val id: String, val untilMillis: Long? = null, val required: Boolean = false)
+data class AllowedApp(
+    val id: String,
+    val untilMillis: Long? = null,
+    val required: Boolean = false,
+    /** Nome da mostrare allo studente; se manca si usa [id]. */
+    val name: String? = null,
+)
 
 /**
  * App della policy: con `allowlist` si usano solo le app in [allowed], con `blocklist` si
@@ -123,7 +129,12 @@ data class Policy(
                         throw ProtocolException("until non valido: $it")
                     }
                 }
-                AllowedApp(item.getString("id"), until, item.optBoolean("required", false))
+                AllowedApp(
+                    item.getString("id"),
+                    until,
+                    item.optBoolean("required", false),
+                    item.optString("name").takeIf { it.isNotBlank() }?.take(100),
+                )
             }
             val blockedJson = json.optJSONArray("blocked") ?: JSONArray()
             val blocked = (0 until blockedJson.length()).map { blockedJson.getString(it) }.toSet()

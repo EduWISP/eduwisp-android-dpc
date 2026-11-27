@@ -30,6 +30,7 @@ class AppsPolicyTest {
         assertEquals("allowlist", apps.mode)
         assertEquals(5, apps.allowed.size)
         assertTrue(apps.allowed.first { it.id == "com.microsoft.teams" }.required)
+        assertEquals("Microsoft Teams", apps.allowed.first { it.id == "com.microsoft.teams" }.name)
         assertTrue("com.zhiliaoapp.musically" in apps.blocked)
         val wiki = apps.allowed.first { it.id == "org.wikipedia" }
         assertEquals(OffsetDateTime.parse("2027-03-02T11:00:00+01:00").toInstant().toEpochMilli(), wiki.untilMillis)
@@ -111,7 +112,7 @@ class AppsPolicyTest {
             "allowlist",
             listOf(AllowedApp("org.mozilla.firefox", required = true), AllowedApp("com.microsoft.teams", required = true)),
         )
-        assertEquals(listOf("com.microsoft.teams"), applier.missingRequired(apps))
+        assertEquals(listOf("com.microsoft.teams"), applier.missingRequired(apps).map { it.id })
         val issues = applier.apply(policy(apps), now)
         assertEquals(listOf(NonCompliance("apps_required", NonComplianceReason.PENDING)), issues)
     }

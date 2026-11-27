@@ -12,7 +12,10 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+import org.eduwisp.dpc.protocol.AllowedApp
 import org.eduwisp.dpc.protocol.FamilyAccessChoice
+import org.json.JSONArray
+import org.json.JSONObject
 
 class PrefsAgentStore(context: Context) : AgentStore {
     val prefs: SharedPreferences = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -49,9 +52,18 @@ class PrefsAgentStore(context: Context) : AgentStore {
     override var nextAppExpiryMillis: Long?
         get() = prefs.getLong("next_app_expiry", 0).takeIf { it > 0 }
         set(value) = prefs.edit().putLong("next_app_expiry", value ?: 0).apply()
-    override var missingRequiredApps: List<String>
-        get() = prefs.getString("missing_required", "")!!.split(',').filter { it.isNotEmpty() }
-        set(value) = prefs.edit().putString("missing_required", value.joinToString(",")).apply()
+    override var missingRequiredApps: List<AllowedApp>
+        get() {
+            val json = JSONArray(prefs.getString("missing_required", "[]") ?: "[]")
+            return (0 until json.length()).map {
+                val o = json.getJSONObject(it)
+                AllowedApp(o.getString("id"), required = true, name = o.optString("name").ifBlank { null })
+            }
+        }
+        set(value) {
+            val json = JSONArray(value.map { JSONObject().put("id", it.id).put("name", it.name ?: "") })
+            prefs.edit().putString("missing_required", json.toString()).apply()
+        }
     override var pendingFamilyChoice: FamilyAccessChoice?
         get() {
             val granted = prefs.getString("family_choice_granted", null)?.toBooleanStrictOrNull()

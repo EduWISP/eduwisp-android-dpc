@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Michele Salerno e i contributori di EduWISP
 package org.eduwisp.dpc.policy
 
+import org.eduwisp.dpc.protocol.AllowedApp
 import org.eduwisp.dpc.protocol.AppsPolicy
 import org.eduwisp.dpc.protocol.NonCompliance
 import org.eduwisp.dpc.protocol.NonComplianceReason
@@ -56,11 +57,11 @@ class PolicyApplier(private val controls: DeviceControls) {
     }
 
     /** App obbligatorie non ancora installate, da segnalare allo studente. */
-    fun missingRequired(apps: AppsPolicy?): List<String> {
-        val required = apps?.allowed?.filter { it.required }?.map { it.id } ?: return emptyList()
+    fun missingRequired(apps: AppsPolicy?): List<AllowedApp> {
+        val required = apps?.allowed?.filter { it.required } ?: return emptyList()
         if (required.isEmpty()) return emptyList()
         val installed = controls.launchablePackages()
-        return required.filterNot(installed::contains)
+        return required.filterNot { it.id in installed }
     }
 
     /**
