@@ -28,7 +28,8 @@ class AppsPolicyTest {
         val json = JSONObject(javaClass.getResource("/protocol/v0/policy-apps.json")!!.readText())
         val apps = Policy.parse(json).apps!!
         assertEquals("allowlist", apps.mode)
-        assertEquals(5, apps.allowed.size)
+        assertEquals(6, apps.allowed.size)
+        assertEquals("9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", apps.allowed.first { it.id == "org.example.atlante" }.install!!.sha256)
         assertTrue(apps.allowed.first { it.id == "com.microsoft.teams" }.required)
         assertEquals("Microsoft Teams", apps.allowed.first { it.id == "com.microsoft.teams" }.name)
         assertTrue("com.zhiliaoapp.musically" in apps.blocked)

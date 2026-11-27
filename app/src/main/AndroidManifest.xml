@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Installazione silenziosa delle app obbligatorie come proprietario del dispositivo (ADR-0020). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- Per elencare le app con icona e la schermata Home (visibilità dei pacchetti, Android 11+). -->
     <queries>
@@ -47,6 +49,11 @@
                 <action android:name="android.app.action.PROFILE_PROVISIONING_COMPLETE" />
             </intent-filter>
         </receiver>
+
+        <!-- Esito delle installazioni silenziose delle app obbligatorie (ADR-0020). -->
+        <receiver
+            android:name=".install.InstallResultReceiver"
+            android:exported="false" />
 
         <!-- Richieste dal provisioning da Android 10 e obbligatorie da Android 12. -->
         <activity

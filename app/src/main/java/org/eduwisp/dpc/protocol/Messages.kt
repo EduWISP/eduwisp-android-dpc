@@ -78,7 +78,14 @@ data class AllowedApp(
     val required: Boolean = false,
     /** Nome da mostrare allo studente; se manca si usa [id]. */
     val name: String? = null,
+    /** Logo pubblico dell'app (ADR-0020). */
+    val icon: String? = null,
+    /** APK da installare in silenzio (ADR-0020). */
+    val install: ApkInstall? = null,
 )
+
+/** APK sul server della scuola: si scarica con la credenziale del dispositivo e si verifica. */
+data class ApkInstall(val url: String, val sha256: String, val size: Long?)
 
 /**
  * App della policy: con `allowlist` si usano solo le app in [allowed], con `blocklist` si
@@ -134,6 +141,14 @@ data class Policy(
                     until,
                     item.optBoolean("required", false),
                     item.optString("name").takeIf { it.isNotBlank() }?.take(100),
+                    item.optString("icon").takeIf { it.isNotBlank() },
+                    item.optJSONObject("install")?.let {
+                        ApkInstall(
+                            it.getString("url"),
+                            it.getString("sha256").lowercase(),
+                            if (it.has("size")) it.getLong("size") else null,
+                        )
+                    },
                 )
             }
             val blockedJson = json.optJSONArray("blocked") ?: JSONArray()

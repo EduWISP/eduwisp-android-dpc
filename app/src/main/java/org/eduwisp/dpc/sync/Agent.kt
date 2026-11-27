@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Michele Salerno e i contributori di EduWISP
 package org.eduwisp.dpc.sync
 
+import org.eduwisp.dpc.install.AppInstaller
+import org.eduwisp.dpc.install.InstallOutcome
 import org.eduwisp.dpc.policy.PolicyApplier
+import org.eduwisp.dpc.protocol.AllowedApp
+import org.eduwisp.dpc.protocol.NonCompliance
+import org.eduwisp.dpc.protocol.NonComplianceReason
 import org.eduwisp.dpc.protocol.AgentInfo
 import org.eduwisp.dpc.protocol.EnrollmentRequest
 import org.eduwisp.dpc.protocol.ProtocolClient
@@ -23,6 +28,7 @@ class Agent(
     private val info: AgentInfo,
     private val clientFor: (String) -> ProtocolClient = ::ProtocolClient,
     private val now: () -> Long = System::currentTimeMillis,
+    private val installer: AppInstaller? = null,
 ) {
     fun sync(): Outcome {
         if (store.retired) return Outcome.STOP
@@ -43,7 +49,11 @@ class Agent(
         val issues = applier.apply(policy, now())
         store.lastPolicyJson = policy.source
         store.nextAppExpiryMillis = PolicyApplier.nextExpiry(policy.apps, now())
-        store.missingRequiredApps = applier.missingRequired(policy.apps)
+        val missing = applier.missingRequired(policy.apps)
+        store.missingRequiredApps = missing
+        // App obbligatorie (ADR-0020): con l'APK si installano da sole, già al primo ciclo
+        // dopo la registrazione; senza APK lo studente vede il pulsante «Installa».
+        val installIssues = installRequired(missing, token)
         store.policyVersionApplied = policy.policyVersion
         store.pollIntervalSeconds = policy.pollIntervalSeconds
         store.nonCompliance = issues.map { "${it.setting}:${it.reason.wire}" }
@@ -56,7 +66,7 @@ class Agent(
 
         val report = StatusReport(
             policy.policyVersion,
-            issues,
+            (issues + installIssues).distinct(),
             info.agentVersion,
             info.osVersion,
             familyAccessChoice = choice,
@@ -68,11 +78,30 @@ class Agent(
                     store.pendingFamilyChoice = null
                 }
                 store.lastSyncMillis = now()
-                store.lastError = null
+                store.lastError = installError
                 Outcome.DONE
             }
             is Result.Rejected -> rejected(result)
             is Result.Unreachable -> unreachable(result)
+        }
+    }
+
+    /** Ultimo errore di installazione del ciclo: resta visibile anche se lo stato è stato inviato. */
+    private var installError: String? = null
+
+    private fun installRequired(missing: List<AllowedApp>, token: String): List<NonCompliance> {
+        val installer = installer ?: return emptyList()
+        installError = null
+        for (app in missing) {
+            installer.fetchIcon(app)
+            if (app.install == null) continue
+            val outcome = installer.install(app, token)
+            if (outcome is InstallOutcome.Failed) installError = "installazione di ${app.id}: ${outcome.reason}"
+        }
+        return if (installError != null) {
+            listOf(NonCompliance(PolicyApplier.APPS_REQUIRED, NonComplianceReason.FAILED))
+        } else {
+            emptyList()
         }
     }
 
