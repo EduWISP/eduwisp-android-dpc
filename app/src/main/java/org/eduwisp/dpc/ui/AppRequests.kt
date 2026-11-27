@@ -3,12 +3,13 @@
 package org.eduwisp.dpc.ui
 
 import android.content.Context
+import android.content.SharedPreferences
 import org.json.JSONException
 import org.json.JSONObject
 
 /** Stato locale delle richieste di app fatte dallo studente (ADR-0021). */
 class AppRequests(context: Context) {
-    private val prefs = context.getSharedPreferences("richieste_app", Context.MODE_PRIVATE)
+    val prefs: SharedPreferences = context.getSharedPreferences("richieste_app", Context.MODE_PRIVATE)
 
     fun status(id: String): String? = prefs.getString(id, null)
 

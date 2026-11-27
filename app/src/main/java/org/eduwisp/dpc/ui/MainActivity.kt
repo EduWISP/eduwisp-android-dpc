@@ -86,11 +86,14 @@ class MainActivity : Activity() {
     override fun onStart() {
         super.onStart()
         store.prefs.registerOnSharedPreferenceChangeListener(listener)
+        // Anche lo stato delle richieste di app (ADR-0021) aggiorna la schermata.
+        AppRequests(this).prefs.registerOnSharedPreferenceChangeListener(listener)
         render()
     }
 
     override fun onStop() {
         store.prefs.unregisterOnSharedPreferenceChangeListener(listener)
+        AppRequests(this).prefs.unregisterOnSharedPreferenceChangeListener(listener)
         super.onStop()
     }
 
