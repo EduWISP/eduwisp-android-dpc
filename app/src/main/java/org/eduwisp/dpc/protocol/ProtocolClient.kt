@@ -37,12 +37,20 @@ class ProtocolClient(
     fun status(deviceToken: String, report: StatusReport): Result<Unit> =
         call("POST", "$base/status", deviceToken, report.toJson().toString(), 204) { }
 
+    /** Richiesta di un'app (ADR-0021): restituisce lo stato (pending, approved, rejected). */
+    fun appRequest(deviceToken: String, request: AppRequestMessage): Result<String> =
+        call("POST", "$base/app-requests", deviceToken, request.toJson().toString(), 201, 200) {
+            checkVersion(it!!)
+            it.getString("status")
+        }
+
     private fun <T> call(
         method: String,
         url: String,
         bearer: String?,
         body: String?,
         expected: Int,
+        alsoExpected: Int? = null,
         parse: (JSONObject?) -> T,
     ): Result<T> {
         val (code, text) = try {
@@ -53,7 +61,7 @@ class ProtocolClient(
         return try {
             val json = text.takeIf { it.isNotBlank() }?.let(::JSONObject)
             when {
-                code == expected -> Result.Ok(parse(json))
+                code == expected || code == alsoExpected -> Result.Ok(parse(json))
                 json != null && json.has("error") -> Result.Rejected(code, ProtocolError.parse(json))
                 else -> Result.Unreachable("HTTP $code")
             }

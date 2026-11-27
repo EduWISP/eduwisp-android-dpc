@@ -39,4 +39,18 @@
     <string name="required_title">Apps required by the school</string>
     <string name="required_explanation">The school asks you to install these apps. Tap an app to open it in the store.</string>
     <string name="required_install">Install %1$s</string>
+    <string name="blocked_title">Apps blocked by the school</string>
+    <string name="blocked_explanation">If you need an app for studying, ask the school: a teacher of your class decides, and your family can give an opinion.</string>
+    <string name="blocked_ask">Ask the school</string>
+    <string name="blocked_ask_again">Ask again</string>
+    <string name="blocked_forbidden">forbidden in all schools</string>
+    <string name="blocked_sending">sending request…</string>
+    <string name="blocked_pending">request sent: waiting for a decision</string>
+    <string name="blocked_rejected">request rejected</string>
+    <string name="blocked_not_personal">requests can only be made from a personal tablet</string>
+    <string name="blocked_error">request failed</string>
+    <string name="blocked_dialog_title">Ask for %1$s</string>
+    <string name="blocked_dialog_hint">Why do you need it? (optional)</string>
+    <string name="blocked_dialog_send">Send</string>
+    <string name="blocked_dialog_cancel">Cancel</string>
 </resources>
