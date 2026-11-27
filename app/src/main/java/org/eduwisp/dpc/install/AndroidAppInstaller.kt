@@ -10,6 +10,7 @@ import android.content.pm.PackageInstaller
 import android.os.Build
 import android.util.Log
 import org.eduwisp.dpc.protocol.AllowedApp
+import org.eduwisp.dpc.store.PrefsAgentStore
 import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
@@ -150,5 +151,10 @@ class InstallResultReceiver : BroadcastReceiver() {
         val name = intent.getStringExtra(PackageInstaller.EXTRA_PACKAGE_NAME)
         val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
         Log.i(TAG, "Installazione di $name: stato $status ${message.orEmpty()}")
+        if (status == PackageInstaller.STATUS_SUCCESS && name != null) {
+            // Lo studente non deve più vedere «Installa» per un'app appena installata.
+            val store = PrefsAgentStore(context)
+            store.missingRequiredApps = store.missingRequiredApps.filterNot { it.id == name }
+        }
     }
 }
