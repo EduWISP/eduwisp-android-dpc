@@ -6,9 +6,19 @@
 
 Primo agente di EduWISP: agente Android open source in modalità device owner: applica policy, restrizioni, kiosk, aggiornamenti e fasce orarie anche offline.
 
-> 🚧 **Stato: progettazione.** Questo repository non contiene ancora codice. La progettazione è nella [documentazione EduWISP](https://eduwisp.org/docs/moduli/android-matrice-compatibilita/).
+> 🚧 **Stato: prototipo v0.** Registrazione con il [protocollo v0](https://github.com/EduWISP/eduwisp-protocol), sincronizzazione periodica e applicazione di `camera_disabled` e `screen_capture_disabled` come device owner. Provato sull'emulatore Android 15 con il server demo; il provisioning con QR code su un tablet reale è ancora da verificare. Progettazione: [matrice di compatibilità](https://eduwisp.org/docs/moduli/android-matrice-compatibilita/).
 
-🇬🇧 *Open-source Android agent running as device owner: enforces policies, restrictions, kiosk, updates and time slots, offline too. **Status: design phase**, no code yet. See the [design docs](https://eduwisp.org/docs/en/modules/android-compatibility-matrix/).*
+🇬🇧 *Open-source Android agent running as device owner: enforces policies, restrictions, kiosk, updates and time slots, offline too. **Status: prototype v0**: enrollment with protocol v0, periodic sync, `camera_disabled` and `screen_capture_disabled`; tested on the Android 15 emulator against the demo server. QR provisioning on real hardware still to be verified.*
+
+## Compilare / Build
+
+Requisiti: JDK 17+, Android SDK 36. Da Android 10 (API 29). / *Requires JDK 17+, Android SDK 36; runs on Android 10+.*
+
+```sh
+./gradlew testDebugUnitTest lintDebug assembleDebug
+```
+
+Prova sull'emulatore, struttura del codice e limiti: [`docs/developer/`](docs/developer/). / *Emulator steps and code layout in `docs/developer/`.*
 
 ## Documentazione / Documentation
 

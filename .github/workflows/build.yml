@@ -1,0 +1,44 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gradle/actions/wrapper-validation@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Esempi del protocollo allineati a eduwisp-protocol
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          ref=main
+          if git ls-remote --exit-code --heads https://github.com/EduWISP/eduwisp-protocol "$BRANCH" >/dev/null; then
+            ref="$BRANCH"
+          fi
+          echo "eduwisp-protocol @ $ref"
+          git clone --depth 1 --branch "$ref" https://github.com/EduWISP/eduwisp-protocol /tmp/protocol
+          diff -r /tmp/protocol/examples/v0 app/src/test/resources/protocol/v0
+      - run: ./gradlew --console=plain testDebugUnitTest lintDebug assembleDebug assembleRelease
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rapporti
+          path: |
+            app/build/reports/
+            app/build/test-results/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-debug
+          path: app/build/outputs/apk/debug/app-debug.apk

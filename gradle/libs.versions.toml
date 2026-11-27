@@ -1,0 +1,16 @@
+# Solo componenti con licenza libera (ADR-0009): niente Google Play Services né Firebase.
+[versions]
+agp = "8.13.2"
+kotlin = "2.2.21"
+work = "2.11.2"
+junit = "4.13.2"
+json = "20250517"
+
+[libraries]
+androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+junit = { module = "junit:junit", version.ref = "junit" }
+json = { module = "org.json:json", version.ref = "json" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

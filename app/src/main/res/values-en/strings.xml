@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<resources>
+    <string name="app_name">EduWISP</string>
+    <string name="admin_description">Manages the device on behalf of the school, following the rules set by the school.</string>
+    <string name="managed_notice">This device is managed by the school with EduWISP. The school only sees technical device data, not personal content.</string>
+    <string name="label_server">Server</string>
+    <string name="label_device">Device</string>
+    <string name="label_state">Status</string>
+    <string name="label_last_sync">Last sync</string>
+    <string name="label_policy">Applied policy version</string>
+    <string name="label_issues">Settings not applied</string>
+    <string name="value_none">none</string>
+    <string name="value_never">never</string>
+    <string name="value_not_configured">not configured</string>
+    <string name="state_not_configured">Not configured: the school\'s QR code is needed.</string>
+    <string name="state_waiting">Waiting for enrollment</string>
+    <string name="state_enrolled">Enrolled</string>
+    <string name="state_compliant">Enrolled, compliant with the policy</string>
+    <string name="state_non_compliant">Enrolled, policy only partly applied</string>
+    <string name="state_retired">Device retired by the school</string>
+    <string name="state_error">Last error: %1$s</string>
+    <string name="not_device_owner">EduWISP is not the device owner: policies cannot be applied.</string>
+    <string name="sync_now">Sync now</string>
+    <string name="attribution">Based on EduWISP · free software AGPL-3.0</string>
+</resources>
