@@ -53,16 +53,10 @@ class PrefsAgentStore(context: Context) : AgentStore {
         get() = prefs.getLong("next_app_expiry", 0).takeIf { it > 0 }
         set(value) = prefs.edit().putLong("next_app_expiry", value ?: 0).apply()
     override var missingRequiredApps: List<AllowedApp>
-        get() {
-            val json = JSONArray(prefs.getString("missing_required", "[]") ?: "[]")
-            return (0 until json.length()).map {
-                val o = json.getJSONObject(it)
-                AllowedApp(o.getString("id"), required = true, name = o.optString("name").ifBlank { null })
-            }
-        }
+        get() = parseMissingRequired(prefs.getString(MISSING_REQUIRED, null))
         set(value) {
             val json = JSONArray(value.map { JSONObject().put("id", it.id).put("name", it.name ?: "") })
-            prefs.edit().putString("missing_required", json.toString()).apply()
+            prefs.edit().putString(MISSING_REQUIRED, json.toString()).remove("missing_required").apply()
         }
     override var pendingFamilyChoice: FamilyAccessChoice?
         get() {
@@ -83,7 +77,21 @@ class PrefsAgentStore(context: Context) : AgentStore {
 
     companion object {
         const val FILE = "agent"
+
+        /** Chiave nuova: la 0.3.0 di prova salvava un altro formato in "missing_required". */
+        private const val MISSING_REQUIRED = "missing_required_apps"
     }
+}
+
+/** Legge le app obbligatorie mancanti; un dato illeggibile vale «nessuna» (si ricalcola al ciclo dopo). */
+internal fun parseMissingRequired(raw: String?): List<AllowedApp> = try {
+    val json = JSONArray(raw ?: "[]")
+    (0 until json.length()).map {
+        val o = json.getJSONObject(it)
+        AllowedApp(o.getString("id"), required = true, name = o.optString("name").ifBlank { null })
+    }
+} catch (e: org.json.JSONException) {
+    emptyList()
 }
 
 /** AES-GCM con chiave non esportabile nell'Android Keystore. */

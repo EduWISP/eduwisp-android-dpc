@@ -123,4 +123,11 @@ class AppsPolicyTest {
         assertEquals(true, controls.vpn)
         assertEquals(true, controls.privateDns)
     }
+
+    @Test
+    fun `un dato salvato in un formato vecchio non fa chiudere l app`() {
+        assertEquals(emptyList<AllowedApp>(), org.eduwisp.dpc.store.parseMissingRequired("com.microsoft.teams,it.x"))
+        val apps = org.eduwisp.dpc.store.parseMissingRequired("""[{"id":"com.microsoft.teams","name":"Microsoft Teams"}]""")
+        assertEquals("Microsoft Teams", apps.single().name)
+    }
 }
