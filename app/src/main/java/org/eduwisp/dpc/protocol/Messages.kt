@@ -96,6 +96,8 @@ data class AppsPolicy(
     val mode: String,
     val allowed: List<AllowedApp>,
     val blocked: Set<String> = emptySet(),
+    /** Stato delle richieste di app dello studente (ADR-0021): identificativo → stato. */
+    val requests: Map<String, String> = emptyMap(),
 )
 
 data class Policy(
@@ -153,7 +155,12 @@ data class Policy(
             }
             val blockedJson = json.optJSONArray("blocked") ?: JSONArray()
             val blocked = (0 until blockedJson.length()).map { blockedJson.getString(it) }.toSet()
-            return AppsPolicy(json.optString("mode"), allowed, blocked)
+            val requestsJson = json.optJSONArray("requests") ?: JSONArray()
+            val requests = (0 until requestsJson.length()).associate {
+                val r = requestsJson.getJSONObject(it)
+                r.getString("id") to r.getString("status")
+            }
+            return AppsPolicy(json.optString("mode"), allowed, blocked, requests)
         }
     }
 }
@@ -195,6 +202,17 @@ data class StatusReport(
         }
 }
 
+/** Richiesta di usare un'app sospesa, fatta dallo studente (ADR-0021). */
+data class AppRequestMessage(val id: String, val name: String?, val note: String?) {
+    fun toJson(): JSONObject = JSONObject()
+        .put("protocol_version", PROTOCOL_VERSION)
+        .put(
+            "app",
+            JSONObject().put("id", id).apply { name?.takeIf { it.isNotBlank() }?.let { put("name", it.take(100)) } },
+        )
+        .apply { note?.trim()?.takeIf { it.isNotEmpty() }?.let { put("note", it.take(300)) } }
+}
+
 data class ProtocolError(val code: String, val message: String) {
     companion object {
         fun parse(json: JSONObject): ProtocolError {
@@ -206,7 +224,7 @@ data class ProtocolError(val code: String, val message: String) {
 
 private fun agentVersion(value: String) = value.take(32)
 
-private fun checkVersion(json: JSONObject) {
+internal fun checkVersion(json: JSONObject) {
     val version = json.optString("protocol_version")
     if (version != PROTOCOL_VERSION) throw ProtocolException("protocol_version non supportata: $version")
 }

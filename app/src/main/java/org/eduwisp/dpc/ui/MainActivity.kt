@@ -3,9 +3,11 @@
 package org.eduwisp.dpc.ui
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.KeyguardManager
 import android.app.admin.DevicePolicyManager
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -14,14 +16,18 @@ import android.os.Bundle
 import android.text.format.DateUtils
 import android.view.View
 import android.net.Uri
+import android.text.InputFilter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import java.time.OffsetDateTime
+import org.eduwisp.dpc.EduWispAdminReceiver
 import org.eduwisp.dpc.R
 import org.eduwisp.dpc.install.AndroidAppInstaller
 import org.eduwisp.dpc.protocol.FamilyAccessChoice
 import org.eduwisp.dpc.store.PrefsAgentStore
+import org.eduwisp.dpc.sync.AppRequestWorker
 import org.eduwisp.dpc.sync.Sync
 
 /** Schermata informativa: chi usa il dispositivo sa che è gestito e cosa vede la scuola. */
@@ -117,6 +123,83 @@ class MainActivity : Activity() {
         findViewById<TextView>(R.id.details).text = lines.joinToString("\n")
         renderFamily()
         renderRequired()
+        renderBlocked()
+    }
+
+    /** App sospese e richieste alla scuola (ADR-0021). */
+    private fun renderBlocked() {
+        val requests = AppRequests(this)
+        val server = store.requestStatuses
+        val rows = blockedAppRows(suspendedApps(), forbiddenFromPolicy(store.lastPolicyJson)) {
+            requestStatus(requests.status(it), server[it])
+        }
+        findViewById<View>(R.id.blocked_section).visibility = if (rows.isEmpty()) View.GONE else View.VISIBLE
+        val list = findViewById<LinearLayout>(R.id.blocked_list)
+        list.removeAllViews()
+        for (row in rows) {
+            val state = when {
+                row.forbidden -> getString(R.string.blocked_forbidden)
+                row.status == AppRequests.SENDING -> getString(R.string.blocked_sending)
+                row.status == AppRequests.PENDING -> getString(R.string.blocked_pending)
+                row.status == AppRequests.REJECTED -> getString(R.string.blocked_rejected)
+                row.status == AppRequests.NOT_PERSONAL -> getString(R.string.blocked_not_personal)
+                row.status == AppRequests.ERROR -> getString(R.string.blocked_error)
+                else -> null
+            }
+            list.addView(
+                TextView(this).apply {
+                    text = if (state == null) row.label else "${row.label} — $state"
+                    setPadding(0, (8 * resources.displayMetrics.density).toInt(), 0, 0)
+                },
+            )
+            if (row.canAsk) {
+                list.addView(
+                    Button(this).apply {
+                        text = getString(if (row.status == null) R.string.blocked_ask else R.string.blocked_ask_again)
+                        isAllCaps = false
+                        setOnClickListener { askSchool(row) }
+                    },
+                )
+            }
+        }
+    }
+
+    private fun askSchool(row: BlockedAppRow) {
+        val note = EditText(this).apply {
+            hint = getString(R.string.blocked_dialog_hint)
+            filters = arrayOf(InputFilter.LengthFilter(300))
+        }
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.blocked_dialog_title, row.label))
+            .setView(note)
+            .setPositiveButton(R.string.blocked_dialog_send) { _, _ ->
+                AppRequests(this).setStatus(row.id, AppRequests.SENDING)
+                AppRequestWorker.enqueue(this, row.id, row.label, note.text.toString())
+                render()
+            }
+            .setNegativeButton(R.string.blocked_dialog_cancel, null)
+            .show()
+    }
+
+    /** App con icona sospese dalla scuola: identificativo → nome. */
+    private fun suspendedApps(): Map<String, String> {
+        val dpm = getSystemService(DevicePolicyManager::class.java)
+        if (!dpm.isDeviceOwnerApp(packageName)) return emptyMap()
+        val admin = EduWispAdminReceiver.component(this)
+        val pm = packageManager
+        return pm.queryIntentActivities(
+            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER),
+            PackageManager.MATCH_ALL,
+        ).map { it.activityInfo.applicationInfo }
+            .distinctBy { it.packageName }
+            .filter {
+                try {
+                    dpm.isPackageSuspended(admin, it.packageName)
+                } catch (e: PackageManager.NameNotFoundException) {
+                    false
+                }
+            }
+            .associate { it.packageName to pm.getApplicationLabel(it).toString() }
     }
 
     /** App obbligatorie non installate (ADR-0019): un pulsante per ciascuna apre lo store. */

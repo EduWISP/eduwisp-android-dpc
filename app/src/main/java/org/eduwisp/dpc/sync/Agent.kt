@@ -49,6 +49,7 @@ class Agent(
         val issues = applier.apply(policy, now())
         store.lastPolicyJson = policy.source
         store.nextAppExpiryMillis = PolicyApplier.nextExpiry(policy.apps, now())
+        store.requestStatuses = policy.apps?.requests ?: emptyMap()
         val missing = applier.missingRequired(policy.apps)
         store.missingRequiredApps = missing
         // App obbligatorie (ADR-0020): con l'APK si installano da sole, già al primo ciclo

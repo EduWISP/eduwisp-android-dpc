@@ -58,6 +58,14 @@ class PrefsAgentStore(context: Context) : AgentStore {
             val json = JSONArray(value.map { JSONObject().put("id", it.id).put("name", it.name ?: "") })
             prefs.edit().putString(MISSING_REQUIRED, json.toString()).remove("missing_required").apply()
         }
+    override var requestStatuses: Map<String, String>
+        get() = try {
+            val o = JSONObject(prefs.getString("request_statuses", "{}") ?: "{}")
+            o.keys().asSequence().associateWith { o.getString(it) }
+        } catch (e: org.json.JSONException) {
+            emptyMap()
+        }
+        set(value) = prefs.edit().putString("request_statuses", JSONObject(value).toString()).apply()
     override var pendingFamilyChoice: FamilyAccessChoice?
         get() {
             val granted = prefs.getString("family_choice_granted", null)?.toBooleanStrictOrNull()

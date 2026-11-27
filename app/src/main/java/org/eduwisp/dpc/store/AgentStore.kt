@@ -34,6 +34,8 @@ interface AgentStore {
     var nextAppExpiryMillis: Long?
     /** App obbligatorie non ancora installate: identificativo e nome. */
     var missingRequiredApps: List<AllowedApp>
+    /** Stato delle richieste di app secondo il server (ADR-0021). */
+    var requestStatuses: Map<String, String>
 }
 
 class MemoryAgentStore : AgentStore {
@@ -53,6 +55,7 @@ class MemoryAgentStore : AgentStore {
     override var lastPolicyJson: String? = null
     override var nextAppExpiryMillis: Long? = null
     override var missingRequiredApps: List<AllowedApp> = emptyList()
+    override var requestStatuses: Map<String, String> = emptyMap()
 }
 
 const val DEFAULT_POLL_SECONDS = 900
