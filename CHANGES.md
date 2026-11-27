@@ -2,6 +2,7 @@
 
 ## Non rilasciato / Unreleased
 
+- 0.2.0 — Studenti maggiorenni (ADR-0018): se la scuola lo chiede, la schermata mostra la scelta sull'accesso dei familiari; la scelta si conferma con il blocco schermo (senza blocco schermo non si può scegliere), resta in attesa se il server non è raggiungibile e si invia con il rapporto di stato. / *0.2.0 — Adult students choose on the device, confirmed with the screen lock, whether family members keep access.*
 - Prototipo v0 in Kotlin (minSdk 29, targetSdk 36): device owner con provisioning QR (`GET_PROVISIONING_MODE`, `ADMIN_POLICY_COMPLIANCE`), registrazione, lettura della policy e rapporto di stato con il protocollo v0. / *Kotlin prototype v0: device owner with QR provisioning, enrollment, policy and status with protocol v0.*
 - Impostazioni `camera_disabled` e `screen_capture_disabled`; quelle sconosciute o non applicabili vengono segnalate al server. / *Settings `camera_disabled`, `screen_capture_disabled`; unknown or failed ones are reported.*
 - Sincronizzazione periodica con WorkManager, un ciclo alla volta; funziona offline con l'ultima policy applicata. / *Periodic sync with WorkManager, one cycle at a time; offline-safe.*

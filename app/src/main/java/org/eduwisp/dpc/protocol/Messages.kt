@@ -57,11 +57,21 @@ data class EnrollmentResponse(
     }
 }
 
+/**
+ * Presente solo se il dispositivo è affidato a uno studente maggiorenne (ADR-0018).
+ * [granted] è la scelta registrata dal server, null se lo studente non ha ancora scelto.
+ */
+data class FamilyAccess(val granted: Boolean?)
+
+/** Scelta dello studente, confermata con il blocco schermo; [decidedAt] in ISO 8601. */
+data class FamilyAccessChoice(val granted: Boolean, val decidedAt: String)
+
 data class Policy(
     val policyVersion: Int,
     val pollIntervalSeconds: Int,
     /** Impostazioni ricevute; quelle sconosciute restano qui e vengono segnalate come non supportate. */
     val settings: Map<String, Any>,
+    val familyAccess: FamilyAccess? = null,
 ) {
     companion object {
         fun parse(json: JSONObject): Policy {
@@ -72,6 +82,9 @@ data class Policy(
                 policyVersion = json.getInt("policy_version"),
                 pollIntervalSeconds = json.getInt("poll_interval_seconds"),
                 settings = settings,
+                familyAccess = json.optJSONObject("family_access")?.let {
+                    FamilyAccess(if (it.isNull("granted")) null else it.getBoolean("granted"))
+                },
             )
         }
     }
@@ -86,6 +99,7 @@ data class StatusReport(
     val nonCompliance: List<NonCompliance>,
     val agentVersion: String,
     val osVersion: String,
+    val familyAccessChoice: FamilyAccessChoice? = null,
 ) {
     val compliant: Boolean get() = nonCompliance.isEmpty()
 
@@ -103,6 +117,14 @@ data class StatusReport(
         )
         .put("agent_version", agentVersion(agentVersion))
         .put("os_version", osVersion.take(32))
+        .apply {
+            familyAccessChoice?.let {
+                put(
+                    "family_access_choice",
+                    JSONObject().put("granted", it.granted).put("decided_at", it.decidedAt.take(40)),
+                )
+            }
+        }
 }
 
 data class ProtocolError(val code: String, val message: String) {

@@ -5,6 +5,7 @@ package org.eduwisp.dpc
 import org.eduwisp.dpc.policy.DeviceControls
 import org.eduwisp.dpc.policy.PolicyApplier
 import org.eduwisp.dpc.protocol.AgentInfo
+import org.eduwisp.dpc.protocol.FamilyAccessChoice
 import org.eduwisp.dpc.protocol.ProtocolClient
 import org.eduwisp.dpc.protocol.Transport
 import org.eduwisp.dpc.store.MemoryAgentStore
@@ -158,5 +159,42 @@ class AgentTest {
         store.serverUrl = null
         assertEquals(Outcome.STOP, agent.sync())
         assertTrue(server.requests.isEmpty())
+    }
+
+    private val policyMaggiorenne = 200 to """{"protocol_version":"0","policy_version":4,"poll_interval_seconds":900,
+        "settings":{},"family_access":{"choice_requested":true,"granted":null}}"""
+
+    @Test
+    fun `la scelta dello studente parte solo se il server la chiede`() {
+        store.pendingFamilyChoice = FamilyAccessChoice(true, "2027-03-02T08:15:00+01:00")
+        agent.sync() // policy senza family_access: la scelta viene scartata
+        assertFalse(server.requests.last().third!!.has("family_access_choice"))
+        assertNull(store.pendingFamilyChoice)
+        assertFalse(store.familyAccessRequested)
+    }
+
+    @Test
+    fun `lo studente maggiorenne sceglie e la scelta arriva al server`() {
+        server.policy = policyMaggiorenne
+        agent.sync()
+        assertTrue(store.familyAccessRequested)
+        assertNull(store.familyAccessGranted)
+
+        store.pendingFamilyChoice = FamilyAccessChoice(false, "2027-03-02T08:15:00+01:00")
+        agent.sync()
+        val scelta = server.requests.last().third!!.getJSONObject("family_access_choice")
+        assertEquals(mapOf("granted" to false, "decided_at" to "2027-03-02T08:15:00+01:00"), scelta.asMap())
+        assertNull(store.pendingFamilyChoice)
+        assertEquals(false, store.familyAccessGranted)
+    }
+
+    @Test
+    fun `offline la scelta resta in attesa`() {
+        server.policy = policyMaggiorenne
+        agent.sync()
+        store.pendingFamilyChoice = FamilyAccessChoice(true, "2027-03-02T08:15:00+01:00")
+        server.status = 503 to """{"error":{"code":"unavailable","message":""}}"""
+        agent.sync()
+        assertEquals(FamilyAccessChoice(true, "2027-03-02T08:15:00+01:00"), store.pendingFamilyChoice)
     }
 }

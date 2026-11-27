@@ -45,9 +45,25 @@ class Agent(
         store.pollIntervalSeconds = policy.pollIntervalSeconds
         store.nonCompliance = issues.map { "${it.setting}:${it.reason.wire}" }
 
-        val report = StatusReport(policy.policyVersion, issues, info.agentVersion, info.osVersion)
+        // Studenti maggiorenni (ADR-0018): la scelta si invia solo se il server la chiede.
+        store.familyAccessRequested = policy.familyAccess != null
+        store.familyAccessGranted = policy.familyAccess?.granted
+        if (policy.familyAccess == null) store.pendingFamilyChoice = null
+        val choice = store.pendingFamilyChoice
+
+        val report = StatusReport(
+            policy.policyVersion,
+            issues,
+            info.agentVersion,
+            info.osVersion,
+            familyAccessChoice = choice,
+        )
         return when (val result = client.status(token, report)) {
             is Result.Ok -> {
+                if (choice != null) {
+                    store.familyAccessGranted = choice.granted
+                    store.pendingFamilyChoice = null
+                }
                 store.lastSyncMillis = now()
                 store.lastError = null
                 Outcome.DONE
