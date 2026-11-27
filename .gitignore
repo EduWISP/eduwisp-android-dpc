@@ -2,3 +2,14 @@
 *.swp
 .idea/
 .vscode/
+# Android / Gradle
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+*.jks
+*.keystore
+keystore.properties
+captures/
+.kotlin/
