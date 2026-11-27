@@ -36,4 +36,8 @@
     <string name="family_confirm_allow">Usa il blocco schermo per consentire l\'accesso ai familiari.</string>
     <string name="family_confirm_deny">Usa il blocco schermo per negare l\'accesso ai familiari.</string>
     <string name="family_need_lock">Per scegliere imposta prima un blocco schermo (PIN, sequenza o password): così nessun altro può scegliere al tuo posto.</string>
+    <string name="app_blocked_message">App non consentita dalla scuola. Se ti serve per una lezione, chiedi al docente di sbloccarla.</string>
+    <string name="required_title">App richieste dalla scuola</string>
+    <string name="required_explanation">La scuola chiede di installare queste app. Tocca un\'app per aprirla nello store.</string>
+    <string name="required_install">Installa %1$s</string>
 </resources>

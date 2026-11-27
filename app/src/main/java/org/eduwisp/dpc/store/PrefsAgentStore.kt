@@ -45,6 +45,13 @@ class PrefsAgentStore(context: Context) : AgentStore {
     override var familyAccessGranted: Boolean?
         get() = prefs.getString("family_access_granted", null)?.toBooleanStrictOrNull()
         set(value) = prefs.edit().putString("family_access_granted", value?.toString()).apply()
+    override var lastPolicyJson by string("last_policy")
+    override var nextAppExpiryMillis: Long?
+        get() = prefs.getLong("next_app_expiry", 0).takeIf { it > 0 }
+        set(value) = prefs.edit().putLong("next_app_expiry", value ?: 0).apply()
+    override var missingRequiredApps: List<String>
+        get() = prefs.getString("missing_required", "")!!.split(',').filter { it.isNotEmpty() }
+        set(value) = prefs.edit().putString("missing_required", value.joinToString(",")).apply()
     override var pendingFamilyChoice: FamilyAccessChoice?
         get() {
             val granted = prefs.getString("family_choice_granted", null)?.toBooleanStrictOrNull()

@@ -26,6 +26,13 @@ interface AgentStore {
     var familyAccessGranted: Boolean?
     /** Scelta confermata sul dispositivo ma non ancora ricevuta dal server. */
     var pendingFamilyChoice: FamilyAccessChoice?
+
+    /** Ultima policy ricevuta, per riapplicarla senza rete (ADR-0019). */
+    var lastPolicyJson: String?
+    /** Prossima scadenza di uno sblocco temporaneo di un'app. */
+    var nextAppExpiryMillis: Long?
+    /** App obbligatorie non ancora installate (identificativi). */
+    var missingRequiredApps: List<String>
 }
 
 class MemoryAgentStore : AgentStore {
@@ -42,6 +49,9 @@ class MemoryAgentStore : AgentStore {
     override var familyAccessRequested: Boolean = false
     override var familyAccessGranted: Boolean? = null
     override var pendingFamilyChoice: FamilyAccessChoice? = null
+    override var lastPolicyJson: String? = null
+    override var nextAppExpiryMillis: Long? = null
+    override var missingRequiredApps: List<String> = emptyList()
 }
 
 const val DEFAULT_POLL_SECONDS = 900

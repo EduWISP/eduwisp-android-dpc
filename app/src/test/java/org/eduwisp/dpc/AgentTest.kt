@@ -25,8 +25,25 @@ private const val TOKEN = "$DEVICE.credenziale-fittizia"
 class FakeControls(override var isDeviceOwner: Boolean = true) : DeviceControls {
     var camera: Boolean? = null
     var capture: Boolean? = null
+    var launchable = setOf("org.eduwisp.dpc", "com.android.launcher3", "org.mozilla.firefox", "com.example.gioco")
+    var protected = setOf("org.eduwisp.dpc", "com.android.launcher3", "com.google.android.inputmethod.latin")
+    val suspended = mutableSetOf<String>()
+    var failing = emptySet<String>()
+    var unknownSourcesBlocked: Boolean? = null
     override fun setCameraDisabled(disabled: Boolean) { camera = disabled }
     override fun setScreenCaptureDisabled(disabled: Boolean) { capture = disabled }
+    override fun launchablePackages() = launchable
+    override fun protectedPackages() = protected
+    override fun setPackagesSuspended(packages: Set<String>, suspended: Boolean): Set<String> {
+        val ok = packages - failing
+        if (suspended) this.suspended += ok else this.suspended -= ok
+        return packages intersect failing
+    }
+    override fun setUnknownSourcesBlocked(blocked: Boolean) { unknownSourcesBlocked = blocked }
+    var vpn: Boolean? = null
+    var privateDns: Boolean? = null
+    override fun setVpnConfigDisabled(disabled: Boolean) { vpn = disabled }
+    override fun setPrivateDnsConfigDisabled(disabled: Boolean) { privateDns = disabled }
 }
 
 /** Server finto: risponde secondo la rotta e registra le richieste ricevute. */
@@ -89,7 +106,13 @@ class AgentTest {
         val (_, bearer, body) = server.requests.first()
         assertNull(bearer)
         assertEquals(
-            listOf("setting:camera_disabled", "setting:screen_capture_disabled"),
+            listOf(
+                "setting:camera_disabled",
+                "setting:private_dns_config_disabled",
+                "setting:screen_capture_disabled",
+                "setting:vpn_config_disabled",
+                "apps:allowlist",
+            ),
             body!!.getJSONArray("capabilities").asList(),
         )
     }

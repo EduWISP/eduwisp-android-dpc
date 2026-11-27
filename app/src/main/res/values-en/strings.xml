@@ -35,4 +35,8 @@
     <string name="family_confirm_allow">Use your screen lock to allow family access.</string>
     <string name="family_confirm_deny">Use your screen lock to deny family access.</string>
     <string name="family_need_lock">To choose, first set a screen lock (PIN, pattern or password) so nobody else can choose for you.</string>
+    <string name="app_blocked_message">This app is not allowed by the school. If you need it for a lesson, ask your teacher to unlock it.</string>
+    <string name="required_title">Apps required by the school</string>
+    <string name="required_explanation">The school asks you to install these apps. Tap an app to open it in the store.</string>
+    <string name="required_install">Install %1$s</string>
 </resources>
