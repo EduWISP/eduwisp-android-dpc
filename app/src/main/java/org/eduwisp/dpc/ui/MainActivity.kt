@@ -7,6 +7,9 @@ import android.app.KeyguardManager
 import android.app.admin.DevicePolicyManager
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.text.format.DateUtils
 import android.view.View
@@ -16,6 +19,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import java.time.OffsetDateTime
 import org.eduwisp.dpc.R
+import org.eduwisp.dpc.install.AndroidAppInstaller
 import org.eduwisp.dpc.protocol.FamilyAccessChoice
 import org.eduwisp.dpc.store.PrefsAgentStore
 import org.eduwisp.dpc.sync.Sync
@@ -127,9 +131,20 @@ class MainActivity : Activity() {
                     text = getString(R.string.required_install, app.name ?: app.id)
                     isAllCaps = false
                     setOnClickListener { openStore(app.id) }
+                    icon(app.id)?.let { setCompoundDrawablesRelativeWithIntrinsicBounds(it, null, null, null) }
+                    compoundDrawablePadding = (8 * resources.displayMetrics.density).toInt()
                 },
             )
         }
+    }
+
+    /** Logo scaricato durante la sincronizzazione (ADR-0020), ridimensionato a 32 dp. */
+    private fun icon(id: String): BitmapDrawable? {
+        val file = AndroidAppInstaller.iconFile(this, id)
+        if (!file.exists()) return null
+        val bitmap = BitmapFactory.decodeFile(file.path) ?: return null
+        val size = (32 * resources.displayMetrics.density).toInt()
+        return BitmapDrawable(resources, Bitmap.createScaledBitmap(bitmap, size, size, true))
     }
 
     private fun openStore(id: String) {

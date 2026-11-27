@@ -15,6 +15,7 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import org.eduwisp.dpc.BuildConfig
+import org.eduwisp.dpc.install.AndroidAppInstaller
 import org.eduwisp.dpc.policy.AndroidDeviceControls
 import org.eduwisp.dpc.policy.LocalPolicy
 import org.eduwisp.dpc.policy.PolicyApplier
@@ -32,7 +33,13 @@ class AppExpiryWorker(context: Context, params: WorkerParameters) : Worker(conte
 class SyncWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     override fun doWork(): Result {
         val store = PrefsAgentStore(applicationContext)
-        val agent = Agent(store, PolicyApplier(AndroidDeviceControls(applicationContext)), agentInfo())
+        val installer = store.serverUrl?.let { AndroidAppInstaller(applicationContext, it) }
+        val agent = Agent(
+            store,
+            PolicyApplier(AndroidDeviceControls(applicationContext)),
+            agentInfo(),
+            installer = installer,
+        )
         // Un ciclo alla volta: due registrazioni parallele creerebbero due dispositivi sul server.
         val outcome = synchronized(LOCK) { agent.sync() }
         Sync.schedule(applicationContext, store.pollIntervalSeconds)
