@@ -11,7 +11,7 @@ import android.os.Build
 import android.os.PersistableBundle
 import org.eduwisp.dpc.provisioning.Provisioning
 
-class DpcReceiver : DeviceAdminReceiver() {
+class EduWispAdminReceiver : DeviceAdminReceiver() {
 
     /** Percorso di provisioning precedente ad Android 10, ancora inviato da alcuni produttori. */
     override fun onProfileProvisioningComplete(context: Context, intent: Intent) {
@@ -25,6 +25,6 @@ class DpcReceiver : DeviceAdminReceiver() {
     }
 
     companion object {
-        fun component(context: Context) = ComponentName(context, DpcReceiver::class.java)
+        fun component(context: Context) = ComponentName(context, EduWispAdminReceiver::class.java)
     }
 }

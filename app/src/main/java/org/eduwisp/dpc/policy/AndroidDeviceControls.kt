@@ -4,11 +4,11 @@ package org.eduwisp.dpc.policy
 
 import android.app.admin.DevicePolicyManager
 import android.content.Context
-import org.eduwisp.dpc.DpcReceiver
+import org.eduwisp.dpc.EduWispAdminReceiver
 
 class AndroidDeviceControls(context: Context) : DeviceControls {
     private val dpm = context.getSystemService(DevicePolicyManager::class.java)
-    private val admin = DpcReceiver.component(context)
+    private val admin = EduWispAdminReceiver.component(context)
     private val packageName = context.packageName
 
     override val isDeviceOwner: Boolean get() = dpm.isDeviceOwnerApp(packageName)

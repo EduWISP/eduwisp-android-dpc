@@ -39,7 +39,7 @@ Il device owner si può impostare da adb solo su un dispositivo appena azzerato 
 ```sh
 emulator -avd eduwisp-aosp-35 -wipe-data -no-snapshot &
 adb install -t app/build/outputs/apk/debug/app-debug.apk
-adb shell dpm set-device-owner org.eduwisp.dpc/.DpcReceiver
+adb shell dpm set-device-owner org.eduwisp.dpc/.EduWispAdminReceiver
 
 # Simula gli extra del QR code (solo build di debug, solo da adb).
 # Il token si crea nell'admin del server demo: Dispositivi → Token di registrazione.
@@ -51,7 +51,7 @@ adb shell am broadcast -n org.eduwisp.dpc/.debug.DebugConfigReceiver \
 adb shell dumpsys device_policy | grep -E "no_camera|screenCaptureDisabled"
 
 # Rimuovere il device owner (possibile solo perché la build di debug è testOnly)
-adb shell dpm remove-active-admin org.eduwisp.dpc/.DpcReceiver
+adb shell dpm remove-active-admin org.eduwisp.dpc/.EduWispAdminReceiver
 ```
 
 Per un server di sviluppo sul proprio PC usare `http://10.0.2.2:8000`: l'HTTP in chiaro è consentito solo verso quell'indirizzo e solo nella build di debug.

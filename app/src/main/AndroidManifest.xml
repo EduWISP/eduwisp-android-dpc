@@ -17,7 +17,7 @@
 
         <!-- Amministratore del dispositivo: diventa device owner con il provisioning QR. -->
         <receiver
-            android:name=".DpcReceiver"
+            android:name=".EduWispAdminReceiver"
             android:description="@string/admin_description"
             android:exported="true"
             android:label="@string/app_name"
